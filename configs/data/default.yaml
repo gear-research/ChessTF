@@ -1,0 +1,7 @@
+min_elo: 1800
+min_base_time_seconds: 480
+min_moves: 10
+val_fraction: 0.02
+max_seq_len: 256
+result_conditioning: true
+data_dir: "data/"
