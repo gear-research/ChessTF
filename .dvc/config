@@ -1,2 +1,6 @@
 [core]
     analytics = false
+    remote = s3remote
+['remote "s3remote"']
+    url = s3://chesstf-data/dvc-cache
+    region = us-east-1
