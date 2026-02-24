@@ -28,25 +28,6 @@ _VOCAB_VERSION = "1"
 
 @functools.lru_cache(maxsize=1)
 def _enumerate_all_uci_moves() -> list[str]:
-    """Enumerate every UCI move string that can appear in a legal chess game.
-
-    UCI format: ``[from_sq][to_sq][promo_piece?]``, e.g. ``e2e4``, ``g1f3``,
-    ``e7e8q``.  The vocabulary is derived from actual piece-movement geometry:
-
-    - **Non-pawn pieces** (N, B, R, Q, K): attack squares on an empty board.
-      This naturally covers castling (encoded as king's 2-square rook-type move,
-      e.g. ``e1g1``) and en-passant capture strings (diagonal bishop-type).
-    - **Pawn non-promotion moves** (advances + diagonal captures) coincide with
-      rook-type and bishop-type strings already generated above.
-    - **Pawn promotions**: the only UCI strings unique to pawns — 5-character
-      strings such as ``e7e8q`` — are added separately for both colors.
-
-    The result is cached after the first call.  Vocabulary size is ~1,968 tokens,
-    matching the original spec estimate and comfortably within embedding budgets.
-
-    Returns:
-        Sorted list of UCI move strings (deterministic across runs).
-    """
     import chess
 
     moves: set[str] = set()
