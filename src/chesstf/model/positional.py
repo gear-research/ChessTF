@@ -1,8 +1,14 @@
+from __future__ import annotations
+
 import torch
 from torch import nn
 
 
 class RotaryPositionalEmbeddings(nn.Module):
+
+    cos_table: torch.Tensor
+    sin_table: torch.Tensor
+
     def __init__(self, dim: int, base: int = 10000, max_seq_len: int = 256):
         super().__init__()
         

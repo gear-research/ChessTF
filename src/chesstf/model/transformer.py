@@ -1,13 +1,19 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+import pytorch_lightning as L
 import torch
 from torch import nn
 from torch.nn import functional as F
-import pytorch_lightning as L
 
-from .config import Config
 from .positional import RotaryPositionalEmbeddings
 
+if TYPE_CHECKING:
+    from .config import Config
 
-def norm(x):
+
+def norm(x: torch.Tensor) -> torch.Tensor:
     return F.rms_norm(x, (x.size(-1),))
 
 
@@ -70,7 +76,7 @@ class ChessFormer(L.LightningModule):
 
         self.apply(self._init_weights)
 
-    def _init_weights(self, module: nn.Module):
+    def _init_weights(self, module: nn.Module) -> None:
         if isinstance(module, (nn.Linear, nn.Embedding)):
             nn.init.normal_(module.weight, mean=0.0, std=0.02)
 
@@ -95,13 +101,13 @@ class ChessFormer(L.LightningModule):
         x, targets = batch[:, :-1], batch[:, 1:]
         _, loss = self(x, targets)
         self.log("train/loss", loss, on_step=True, on_epoch=True, prog_bar=True)
-        return loss
+        return loss  # type: ignore
 
     def validation_step(self, batch: torch.Tensor, batch_idx: int) -> torch.Tensor:
         x, targets = batch[:, :-1], batch[:, 1:]
         _, loss = self(x, targets)
         self.log("val/loss", loss, on_epoch=True, prog_bar=True)
-        return loss
+        return loss  # type: ignore
     
     def configure_optimizers(self) -> torch.optim.Optimizer:
         return torch.optim.AdamW(
