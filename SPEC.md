@@ -96,7 +96,7 @@ The result-conditioning tokens are optional and represent a training regime choi
 
 ### Framework & Configuration
 
-- **PyTorch** (raw or with PyTorch Lightning)
+- **PyTorch Lightning** (`LightningModule` + `Trainer`)
 - **Hydra** or YAML-based config system for all hyperparameters
 - Modular code structure: separate data, model, training, and evaluation modules
 - All training code containerized via **Dockerfile** (base: NVIDIA PyTorch image)
@@ -324,8 +324,7 @@ chess-transformer/
 │   │   └── config.py           # Model hyperparameter dataclass
 │   │
 │   ├── training/
-│   │   ├── trainer.py          # Training loop
-│   │   ├── scheduler.py        # LR schedule
+│   │   ├── trainer.py          # LightningModule (model + optimizer + configure_optimizers)
 │   │   └── evaluate.py         # Evaluation harness (Stockfish, metrics)
 │   │
 │   ├── serving/

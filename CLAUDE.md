@@ -69,7 +69,7 @@ All AWS resources in AWS CDK (Python) or Terraform: S3 (data, artifacts, static 
 src/
   data/       # download.py, filter.py, tokenizer.py, dataset.py
   model/      # transformer.py, positional.py (RoPE), config.py
-  training/   # trainer.py, scheduler.py, evaluate.py
+  training/   # trainer.py (LightningModule), evaluate.py
   serving/    # app.py (FastAPI), inference.py (ONNX + masking), handler.py (Mangum)
   utils/      # chess_utils.py, logging.py
 configs/      # Hydra/YAML configs for model, training, data, serving
@@ -80,7 +80,7 @@ tests/        # test_tokenizer.py, test_model.py, test_inference.py, test_api.py
 
 ## Key Technical Decisions
 
-- **PyTorch** for training (raw or PyTorch Lightning)
+- **PyTorch Lightning** for training (`LightningModule` + `Trainer`; LR scheduling via `configure_optimizers()`)
 - **Hydra** or YAML configs for all hyperparameters
 - **W&B** free tier for experiment tracking; every run links to its dataset version (DVC hash) and container image digest
 - **ONNX Runtime** (CPU) for Lambda inference — model is tiny, single-digit ms inference

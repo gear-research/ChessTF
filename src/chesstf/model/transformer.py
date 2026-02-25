@@ -82,6 +82,8 @@ class ChessFormer(L.LightningModule):
 
     def forward(self, x: torch.Tensor, targets: torch.Tensor | None = None
                 ) -> tuple[torch.Tensor, torch.Tensor | None]:
+        assert x.min() >= 0 and x.max() < self.config.vocab_size, \
+            f"Token ID out of range: {x.min().item() = }, {x.max().item() = }"
         x = self.embed(x)
         for block in self.blocks:
             x = block(x)
@@ -93,18 +95,18 @@ class ChessFormer(L.LightningModule):
             loss = F.cross_entropy(
                 logits.view(-1, logits.size(-1)),
                 targets.view(-1),
-                ignore_index=0  # Pad is 0, exclude
+                ignore_index=-100
             )
         return logits, loss
 
-    def training_step(self, batch: torch.Tensor, batch_idx: int) -> torch.Tensor:
-        x, targets = batch[:, :-1], batch[:, 1:]
+    def training_step(self, batch: dict[str, torch.Tensor], batch_idx: int) -> torch.Tensor:
+        x, targets = batch['input_ids'], batch['labels']
         _, loss = self(x, targets)
         self.log("train/loss", loss, on_step=True, on_epoch=True, prog_bar=True)
         return loss  # type: ignore
 
-    def validation_step(self, batch: torch.Tensor, batch_idx: int) -> torch.Tensor:
-        x, targets = batch[:, :-1], batch[:, 1:]
+    def validation_step(self, batch: dict[str, torch.Tensor], batch_idx: int) -> torch.Tensor:
+        x, targets = batch['input_ids'], batch['labels']
         _, loss = self(x, targets)
         self.log("val/loss", loss, on_epoch=True, prog_bar=True)
         return loss  # type: ignore
