@@ -71,3 +71,61 @@ jobs:
 
       - name: Process CLI help
         run: python -m chesstf.data.process --help
+
+      - name: E2E training smoke test
+        run: |
+          python - <<'EOF'
+          import torch
+          import pytorch_lightning as L
+          from torch.utils.data import DataLoader, Dataset
+
+          from chesstf.data.tokenizer import SPECIAL_TOKENS, ChessTokenizer
+          from chesstf.model.config import Config
+          from chesstf.model.transformer import ChessFormer
+
+          tok = ChessTokenizer.build_complete_vocab()
+          special_ids = frozenset(SPECIAL_TOKENS.values())
+          id_to_move = {i: tok.id_to_token(i) for i in range(tok.vocab_size) if i not in special_ids}
+
+          config = Config(layers=2, n_heads=2, embed_dims=64, lr=1e-3)
+
+          class DummyDataset(Dataset):
+              def __init__(self, n=64, seq_len=32):
+                  torch.manual_seed(42)
+                  self.input_ids = torch.randint(6, config.vocab_size, (n, seq_len))
+                  self.input_ids[:, 0] = 1  # <bos>
+                  self.labels = self.input_ids.clone()
+                  self.labels[:, 0] = -100  # ignore loss on <bos>
+              def __len__(self):
+                  return len(self.input_ids)
+              def __getitem__(self, i):
+                  return {"input_ids": self.input_ids[i], "labels": self.labels[i]}
+
+          class LossCapture(L.Callback):
+              def __init__(self):
+                  self.losses = []
+              def on_train_epoch_end(self, trainer, pl_module):
+                  v = trainer.callback_metrics.get("train/loss_epoch")
+                  if v is not None:
+                      self.losses.append(v.item())
+
+          model = ChessFormer(config, id_to_move, stockfish_path=None)
+          train_dl = DataLoader(DummyDataset(n=64), batch_size=16, num_workers=0)
+          val_dl = DataLoader(DummyDataset(n=8), batch_size=8, num_workers=0)
+          capture = LossCapture()
+
+          trainer = L.Trainer(
+              max_epochs=3,
+              enable_progress_bar=False,
+              enable_model_summary=False,
+              logger=False,
+              callbacks=[capture],
+          )
+          trainer.fit(model, train_dataloaders=train_dl, val_dataloaders=val_dl)
+
+          losses = capture.losses
+          assert len(losses) == 3, f"Expected 3 epoch losses, got {losses}"
+          assert all(l > 0 for l in losses), f"Loss must be positive: {losses}"
+          assert losses[-1] < losses[0], f"Loss did not decrease: {losses}"
+          print(f"E2E training smoke test passed. Losses: {[round(l, 4) for l in losses]}")
+          EOF
