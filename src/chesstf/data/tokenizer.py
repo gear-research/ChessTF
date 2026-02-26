@@ -100,7 +100,7 @@ class ChessTokenizer:
         tok.save("vocab.json")
 
         tok2 = ChessTokenizer.load("vocab.json")
-        ids = tok2.encode(["e2e4", "e7e5", "g1f3"], add_special=True)
+        ids = tok2.encode(["e2e4", "e7e5", "g1f3"], add_special=True, result="1-0")
         moves = tok2.decode(ids)
     """
 
@@ -195,22 +195,35 @@ class ChessTokenizer:
     # Encoding / decoding
     # ------------------------------------------------------------------
 
-    def encode(self, moves: list[str], *, add_special: bool = True) -> list[int]:
-        """Encode a list of SAN moves to token IDs.
+    def encode(
+        self,
+        moves: list[str],
+        *,
+        add_special: bool = True,
+        result: str | None = None,
+    ) -> list[int]:
+        """Encode a list of UCI moves to token IDs.
 
         Args:
-            moves: Ordered list of SAN move strings for one game.
+            moves: Ordered list of UCI move strings for one game.
             add_special: If True, prepend ``<bos>`` and append ``<eos>``.
+            result: Optional game result (``'1-0'``, ``'0-1'``,
+                ``'1/2-1/2'``).  When provided and *add_special* is
+                ``True``, the result token is inserted immediately after
+                ``<bos>``, giving ``[<bos>, <result>, move…, <eos>]``.
 
         Returns:
             List of integer token IDs.
 
         Raises:
-            KeyError: If a move is not in the vocabulary.
+            KeyError: If a move or result string is not in the vocabulary.
         """
         ids = [self._token_to_id[m] for m in moves]
         if add_special:
-            ids = [BOS_ID, *ids, EOS_ID]
+            prefix = [BOS_ID]
+            if result is not None:
+                prefix.append(self.encode_result(result))
+            ids = [*prefix, *ids, EOS_ID]
         return ids
 
     def encode_result(self, result: str) -> int:

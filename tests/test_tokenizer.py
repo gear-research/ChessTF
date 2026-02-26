@@ -122,6 +122,36 @@ class TestEncodeDecode:
         with pytest.raises(KeyError):
             simple_tokenizer.encode_result("*")
 
+    def test_encode_with_result_conditioning(self, simple_tokenizer: ChessTokenizer) -> None:
+        ids = simple_tokenizer.encode(["e2e4", "e7e5"], add_special=True, result="1-0")
+        # Expected: [BOS, <w_win>, e2e4, e7e5, EOS]
+        assert len(ids) == 5
+        assert ids[0] == BOS_ID
+        assert ids[1] == SPECIAL_TOKENS["<w_win>"]
+        assert ids[-1] == EOS_ID
+
+    def test_encode_result_conditioning_ordering(self, simple_tokenizer: ChessTokenizer) -> None:
+        """Result token must follow BOS, not precede it."""
+        ids = simple_tokenizer.encode(["e2e4"], add_special=True, result="0-1")
+        assert ids[0] == BOS_ID, "BOS must be first"
+        assert ids[1] == SPECIAL_TOKENS["<b_win>"], "result token must be second"
+        assert ids[-1] == EOS_ID
+
+    def test_encode_result_all_outcomes(self, simple_tokenizer: ChessTokenizer) -> None:
+        for result_str, token_name in [("1-0", "<w_win>"), ("0-1", "<b_win>"), ("1/2-1/2", "<draw>")]:
+            ids = simple_tokenizer.encode(["e2e4"], add_special=True, result=result_str)
+            assert ids[1] == SPECIAL_TOKENS[token_name]
+
+    def test_encode_result_without_add_special_ignored(self, simple_tokenizer: ChessTokenizer) -> None:
+        """result= has no effect when add_special=False."""
+        ids = simple_tokenizer.encode(["e2e4"], add_special=False, result="1-0")
+        assert BOS_ID not in ids
+        assert SPECIAL_TOKENS["<w_win>"] not in ids
+
+    def test_encode_invalid_result_raises(self, simple_tokenizer: ChessTokenizer) -> None:
+        with pytest.raises(KeyError):
+            simple_tokenizer.encode(["e2e4"], add_special=True, result="*")
+
 
 class TestSaveLoad:
     def test_save_creates_valid_json(
@@ -145,7 +175,7 @@ class TestSaveLoad:
 
     def test_load_wrong_version_raises(self, tmp_path: pytest.TempPathFactory) -> None:
         vocab_path = tmp_path / "vocab.json"  # type: ignore[operator]
-        vocab_path.write_text(json.dumps({"version": "99", "special_tokens": {}, "vocab": {}}))  # type: ignore[union-attr]
+        vocab_path.write_text(json.dumps({"version": "99", "special_tokens": {}, "vocab": {}}))
         with pytest.raises(ValueError, match="Unsupported vocab version"):
             ChessTokenizer.load(vocab_path)
 
@@ -154,7 +184,7 @@ class TestSaveLoad:
     ) -> None:
         nested = tmp_path / "deep" / "dir" / "vocab.json"  # type: ignore[operator]
         simple_tokenizer.save(nested)
-        assert nested.exists()  # type: ignore[union-attr]
+        assert nested.exists()
 
 
 class TestBuildCompleteVocab:

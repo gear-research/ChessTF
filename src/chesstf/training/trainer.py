@@ -5,14 +5,29 @@ from pathlib import Path
 
 import pytorch_lightning as L
 
+from chesstf.data.tokenizer import SPECIAL_TOKENS, ChessTokenizer
 from chesstf.model.config import Config
 from chesstf.model.transformer import ChessFormer
 from chesstf.training.datamodule import ChessDataModule
 
+_SPECIAL_IDS: frozenset[int] = frozenset(SPECIAL_TOKENS.values())
 
-def main(config: Config, processed_dir: Path, batch_size: int, epochs: int) -> None:
+
+def main(
+    config: Config,
+    processed_dir: Path,
+    batch_size: int,
+    epochs: int,
+    stockfish_path: str | None,
+) -> None:
+    tok = ChessTokenizer.build_complete_vocab()
+    id_to_move = {
+        tid: tok.id_to_token(tid)
+        for tid in range(tok.vocab_size)
+        if tid not in _SPECIAL_IDS
+    }
     dm = ChessDataModule(processed_dir, batch_size)
-    model = ChessFormer(config)
+    model = ChessFormer(config, id_to_move, stockfish_path=stockfish_path)
     trainer = L.Trainer(max_epochs=epochs)
     trainer.fit(model, datamodule=dm)
 
@@ -55,6 +70,12 @@ if __name__ == "__main__":
         type=int,
         default=256
     )
+    parser.add_argument(
+        "--stockfish-path",
+        help="Path to Stockfish binary (default: /usr/bin/stockfish)",
+        type=str,
+        default=None,
+    )
 
     args = parser.parse_args()
 
@@ -65,4 +86,4 @@ if __name__ == "__main__":
 
     processed_dir = Path(args.processed_dir)
 
-    main(config, processed_dir, args.batch_size, args.epochs)
+    main(config, processed_dir, args.batch_size, args.epochs, args.stockfish_path)
