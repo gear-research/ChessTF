@@ -16,6 +16,7 @@ dependencies = [
     "zstandard>=0.22",
     "pyyaml>=6.0",
     "pytorch-lightning>=2.6.1"
+    "types-PyYAML>=6.0"
 ]
 
 [project.optional-dependencies]
