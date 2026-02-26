@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
 import random
 from typing import TYPE_CHECKING
@@ -92,11 +93,8 @@ def encode_to_binary(
                 continue
 
             if result_conditioning:
-                try:
-                    result_id = tokenizer.encode_result(result)
-                    encoded = [result_id, *encoded]
-                except KeyError:
-                    pass
+                with contextlib.suppress(KeyError):
+                    encoded = tokenizer.encode(moves, add_special=True, result=result)
 
             tokens_list.append(encoded)
 

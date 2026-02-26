@@ -139,7 +139,7 @@ class TestChessDataset:
 
 
 class TestEncodeToBinary:
-    def _make_jsonl(self, tmp_path: Path, records: list[dict]) -> Path:
+    def _make_jsonl(self, tmp_path: Path, records: list[dict]) -> Path:  # type: ignore
         import json
 
         p = tmp_path / "games.jsonl"
@@ -196,9 +196,9 @@ class TestEncodeToBinary:
 
         start, length = int(idx[0, 0]), int(idx[0, 1])
         seq = tokens[start : start + length].tolist()
-        # With result conditioning: [w_win_id=3, bos_id=1, ..., eos_id=2]
-        assert seq[0] == 3  # <w_win>
-        assert seq[1] == 1  # <bos>
+        # With result conditioning: [bos_id=1, w_win_id=3, ..., eos_id=2]
+        assert seq[0] == 1  # <bos>
+        assert seq[1] == 3  # <w_win>
         assert seq[-1] == 2  # <eos>
 
     def test_no_result_conditioning(self, tmp_path: Path) -> None:

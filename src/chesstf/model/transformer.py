@@ -7,7 +7,9 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-from .positional import RotaryPositionalEmbeddings
+from chesstf.model.legality_metric import LegalityMetric
+from chesstf.model.positional import RotaryPositionalEmbeddings
+from chesstf.model.stockfish_metric import StockfishMetric
 
 if TYPE_CHECKING:
     from .config import Config
@@ -63,10 +65,10 @@ class TransformerBlock(nn.Module):
         return x
 
 class ChessFormer(L.LightningModule):
-    def __init__(self, config: Config):
+    def __init__(self, config: Config, id_to_move: dict[int, str], stockfish_path: str | None = None):
         super().__init__()
         self.config = config
-        self.save_hyperparameters()
+        self.save_hyperparameters(ignore=["id_to_move"])
 
         self.embed = nn.Embedding(config.vocab_size, config.embed_dims)
         self.blocks = nn.ModuleList([TransformerBlock(config) for _ in range(config.layers)])
@@ -75,6 +77,9 @@ class ChessFormer(L.LightningModule):
         self.lm_head.weight = self.embed.weight
 
         self.apply(self._init_weights)
+
+        self.legality_metric = LegalityMetric(id_to_move)
+        self.stockfish_metric = StockfishMetric(id_to_move, engine_path=stockfish_path)
 
     def _init_weights(self, module: nn.Module) -> None:
         if isinstance(module, (nn.Linear, nn.Embedding)):
@@ -107,10 +112,18 @@ class ChessFormer(L.LightningModule):
 
     def validation_step(self, batch: dict[str, torch.Tensor], batch_idx: int) -> torch.Tensor:
         x, targets = batch['input_ids'], batch['labels']
-        _, loss = self(x, targets)
+        logits, loss = self(x, targets)
         self.log("val/loss", loss, on_epoch=True, prog_bar=True)
+        self.legality_metric.update(logits, x)
+        self.stockfish_metric.update(logits, x)
         return loss  # type: ignore
-    
+
+    def on_validation_epoch_end(self) -> None:
+        self.log("val/legality", self.legality_metric.compute())
+        self.log("val/stockfish_cp_loss", self.stockfish_metric.compute())
+        self.legality_metric.reset()
+        self.stockfish_metric.reset()
+
     def configure_optimizers(self) -> torch.optim.Optimizer:
         return torch.optim.AdamW(
             self.parameters(), lr=self.config.lr, weight_decay=self.config.wd

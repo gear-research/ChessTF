@@ -25,7 +25,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import requests
-import yaml  # type: ignore[import-untyped]
+import yaml
 
 if TYPE_CHECKING:
     from chesstf.data.filter import FilterConfig, FilterStats
