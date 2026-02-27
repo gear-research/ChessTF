@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: ["main"]
 
+env:
+  WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
+
 jobs:
   lint:
     name: Lint (ruff + mypy)
@@ -47,6 +50,8 @@ jobs:
   smoke:
     name: Smoke test (forward pass)
     runs-on: ubuntu-latest
+    env:
+      WANDB_MODE: disabled
     steps:
       - uses: actions/checkout@v4
 

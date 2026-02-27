@@ -4,6 +4,7 @@ from argparse import ArgumentParser
 from pathlib import Path
 
 import pytorch_lightning as L
+from pytorch_lightning.loggers import WandbLogger
 
 from chesstf.data.tokenizer import SPECIAL_TOKENS, ChessTokenizer
 from chesstf.model.config import Config
@@ -26,9 +27,12 @@ def main(
         for tid in range(tok.vocab_size)
         if tid not in _SPECIAL_IDS
     }
+
+    wandb_logger = WandbLogger(project="chesstf")
+
     dm = ChessDataModule(processed_dir, batch_size)
     model = ChessFormer(config, id_to_move, stockfish_path=stockfish_path)
-    trainer = L.Trainer(max_epochs=epochs)
+    trainer = L.Trainer(max_epochs=epochs, logger=wandb_logger)
     trainer.fit(model, datamodule=dm)
 
 
