@@ -6,6 +6,9 @@ COPY src/ ./src
 COPY configs/ ./configs
 COPY pyproject.toml ./pyproject.toml
 COPY infrastructure/docker/entrypoint.sh ./entrypoint.sh
+COPY .dvc/config .dvc/config
+COPY data/processed.dvc data/processed.dvc
+COPY data/interim.dvc data/interim.dvc
 
 RUN chmod +x ./entrypoint.sh
 RUN apt update && apt install -y --no-install-recommends stockfish 
