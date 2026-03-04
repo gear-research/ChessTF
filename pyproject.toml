@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "chesstf"
 version = "0.1.0"
 description = "Decoder-only transformer that plays chess using SAN"
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 dependencies = [
     "torch>=2.2",
     "numpy>=1.26",
