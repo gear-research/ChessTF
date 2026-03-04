@@ -10,6 +10,7 @@ COPY .dvc/config .dvc/config
 COPY data/processed.dvc data/processed.dvc
 COPY data/interim.dvc data/interim.dvc
 
+RUN git init && git config user.email "docker@build" && git config user.name "Docker"
 RUN chmod +x ./entrypoint.sh
 RUN apt update && apt install -y --no-install-recommends stockfish 
 RUN pip install --no-cache-dir ".[dev]"
