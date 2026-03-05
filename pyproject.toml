@@ -16,6 +16,7 @@ dependencies = [
     "zstandard>=0.22",
     "pyyaml>=6.0",
     "pytorch-lightning>=2.6.1",
+    "torchmetrics>=1.0,<1.4",
     "types-PyYAML>=6.0",
     "wandb>=0.25",
     "dvc[s3]"
