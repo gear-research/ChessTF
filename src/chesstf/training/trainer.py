@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import logging
 from argparse import ArgumentParser
 from pathlib import Path
+
+logging.basicConfig(level=logging.INFO, format="%(name)s: %(message)s")
 
 import pytorch_lightning as L
 from pytorch_lightning.loggers import WandbLogger
@@ -40,7 +43,7 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument(
         "--processed-dir",
-        help="Path to processed data directory",
+        help="Path to processed data directory. Pass a parent directory to train on all month subdirectories, or a single month directory.",
         type=str,
         required=True
     )
