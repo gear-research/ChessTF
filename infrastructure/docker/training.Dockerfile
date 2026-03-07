@@ -1,5 +1,7 @@
 FROM nvcr.io/nvidia/pytorch:24.01-py3
 
+ENV PYTHONUNBUFFERED=1
+
 WORKDIR /app
 
 COPY src/ ./src
