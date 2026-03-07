@@ -14,17 +14,32 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
+def _has_nonempty_split(d: Path) -> bool:
+    """Check that train.bin and val.bin exist and are non-empty."""
+    return all((d / f).stat().st_size > 0 for f in ("train.bin", "val.bin"))
+
+
 def _discover_dirs(root: Path) -> list[Path]:
-    """Return sorted month directories under root that contain train.bin.
+    """Return sorted month directories under root that contain non-empty splits.
 
     Falls back to root itself if it directly contains train.bin (single-month
-    path passed explicitly).
+    path passed explicitly). Skips directories with empty .bin files.
     """
     if (root / "train.bin").exists():
+        if not _has_nonempty_split(root):
+            raise FileNotFoundError(f"Empty train.bin or val.bin in {root}")
         return [root]
-    dirs = sorted(p.parent for p in root.glob("*/train.bin"))
+
+    candidates = sorted(p.parent for p in root.glob("*/train.bin"))
+    dirs = []
+    for d in candidates:
+        if _has_nonempty_split(d):
+            dirs.append(d)
+        else:
+            log.warning("Skipping %s — empty train.bin or val.bin", d.name)
+
     if not dirs:
-        raise FileNotFoundError(f"No train.bin files found under {root}")
+        raise FileNotFoundError(f"No non-empty train.bin files found under {root}")
     return dirs
 
 
