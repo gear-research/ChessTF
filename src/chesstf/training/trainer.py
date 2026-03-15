@@ -4,8 +4,6 @@ import logging
 from argparse import ArgumentParser
 from pathlib import Path
 
-logging.basicConfig(level=logging.INFO, format="%(name)s: %(message)s")
-
 import pytorch_lightning as L
 from pytorch_lightning.loggers import WandbLogger
 
@@ -14,6 +12,7 @@ from chesstf.model.config import Config
 from chesstf.model.transformer import ChessFormer
 from chesstf.training.datamodule import ChessDataModule
 
+logging.basicConfig(level=logging.INFO, format="%(name)s: %(message)s")
 _SPECIAL_IDS: frozenset[int] = frozenset(SPECIAL_TOKENS.values())
 
 
