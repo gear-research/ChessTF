@@ -15,8 +15,6 @@ COPY data/interim.dvc data/interim.dvc
 RUN git init && git config user.email "docker@build" && git config user.name "Docker"
 RUN chmod +x ./entrypoint.sh
 RUN apt update && apt install -y --no-install-recommends stockfish 
-RUN pip config set global.index-url https://pypi.org/simple/ && \
-    pip config unset global.extra-index-url 2>/dev/null; \
-    pip install --no-cache-dir ".[dev]"
+RUN pip install --no-cache-dir ".[dev]"
 
 ENTRYPOINT ["./entrypoint.sh"]
