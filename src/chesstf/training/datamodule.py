@@ -75,8 +75,8 @@ class ChessDataModule(L.LightningDataModule):
                 train_datasets.append(td)
                 val_datasets.append(vd)
 
-            self.train_ds: ConcatDataset[dict] = ConcatDataset(train_datasets)
-            self.val_ds: ConcatDataset[dict] = ConcatDataset(val_datasets)
+            self.train_ds: ConcatDataset[dict] = ConcatDataset(train_datasets)  # type: ignore[type-arg]
+            self.val_ds: ConcatDataset[dict] = ConcatDataset(val_datasets)  # type: ignore[type-arg]
             log.info("Total — train: %d games, val: %d games", len(self.train_ds), len(self.val_ds))
 
     def train_dataloader(self) -> DataLoader:  # type: ignore[type-arg]
