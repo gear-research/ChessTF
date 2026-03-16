@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 
 def norm(x: torch.Tensor) -> torch.Tensor:
-    return F.rms_norm(x, (x.size(-1),))
+    return x * torch.rsqrt(x.pow(2).mean(-1, keepdim=True) + 1e-6)
 
 
 class TransformerBlock(nn.Module):
