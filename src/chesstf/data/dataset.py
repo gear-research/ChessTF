@@ -13,6 +13,9 @@ from torch.utils.data import Dataset
 
 if TYPE_CHECKING:
     from pathlib import Path
+    from typing import Any
+
+    import numpy.typing as npt
 
     from chesstf.data.tokenizer import ChessTokenizer
 
@@ -161,13 +164,13 @@ class ChessDataset(Dataset[dict[str, torch.Tensor]]):
 
         # Memory-map the token array
         n_tokens = bin_path.stat().st_size // np.dtype(_TOKEN_DTYPE).itemsize
-        self._tokens: np.ndarray = np.memmap(
+        self._tokens: npt.NDArray[np.integer[Any]] = np.memmap(
             bin_path, dtype=_TOKEN_DTYPE, mode="r", shape=(n_tokens,)
         )
 
         # Load the full index into RAM (small: 16 bytes × N games)
         raw_idx = np.fromfile(idx_path, dtype=_IDX_DTYPE)
-        self._index: np.ndarray = raw_idx.reshape(-1, 2)  # (N, 2)
+        self._index: npt.NDArray[np.integer[Any]] = raw_idx.reshape(-1, 2)  # (N, 2)
 
     def __len__(self) -> int:
         return len(self._index)
@@ -176,7 +179,7 @@ class ChessDataset(Dataset[dict[str, torch.Tensor]]):
         start, length = int(self._index[idx, 0]), int(self._index[idx, 1])
 
         # Read raw tokens and cast to int64
-        raw: np.ndarray = np.array(
+        raw: npt.NDArray[np.integer[Any]] = np.array(
             self._tokens[start : start + length], dtype=np.int64
         )
 
