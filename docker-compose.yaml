@@ -3,9 +3,12 @@ services:
     build:
       context: .
       dockerfile: infrastructure/docker/training.local.Dockerfile
+    ipc: host
     volumes:
       - ./data:/app/data
     env_file: .env
+    environment:
+      - HTTPS_PROXY=${HTTPS_PROXY:-}
     deploy:
       resources:
         reservations:
@@ -32,11 +35,13 @@ services:
     build:
       context: .
       dockerfile: infrastructure/docker/training.local.Dockerfile
+    ipc: host
     volumes:
       - ./data:/app/data
     env_file: .env
     environment:
       - SWEEP_MODE=1
+      - HTTPS_PROXY=${HTTPS_PROXY:-}
     deploy:
       resources:
         reservations:
