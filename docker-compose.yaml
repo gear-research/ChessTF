@@ -1,0 +1,52 @@
+services:
+  train:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/training.local.Dockerfile
+    volumes:
+      - ./data:/app/data
+    env_file: .env
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    profiles: ["train"]
+    command:
+      - --processed-dir
+      - /app/data/processed
+      - --epochs
+      - "${EPOCHS:-10}"
+      - --batch-size
+      - "${BATCH_SIZE:-128}"
+      - --layers
+      - "${LAYERS:-8}"
+      - --heads
+      - "${HEADS:-4}"
+      - --dims
+      - "${DIMS:-256}"
+
+  sweep:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/training.local.Dockerfile
+    volumes:
+      - ./data:/app/data
+    env_file: .env
+    environment:
+      - SWEEP_MODE=1
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    profiles: ["sweep"]
+    command:
+      - --processed-dir
+      - /app/data/processed
+      - --epochs
+      - "${EPOCHS:-10}"

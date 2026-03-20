@@ -8,7 +8,9 @@ class Config:
     embed_dims: int = 256
     max_len: int = 256
     dropout: float = 0.1
-    lr: float = 1e-5
+    lr: float = 3e-4
+    min_lr: float = 1e-5
+    warmup_steps: int = 500
     wd: float = 0.1
     rotary_base: int = 10000
     vocab_size: int = 1974

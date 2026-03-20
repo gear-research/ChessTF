@@ -6,6 +6,7 @@ WORKDIR /app
 
 COPY src/ ./src
 COPY configs/ ./configs
+COPY scripts/ ./scripts
 COPY pyproject.toml ./pyproject.toml
 COPY infrastructure/docker/entrypoint.sh ./entrypoint.sh
 COPY data/processed ./data/processed

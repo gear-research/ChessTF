@@ -1,0 +1,27 @@
+program: scripts/sweep_train.py
+method: bayes
+metric:
+  name: val/loss
+  goal: minimize
+
+parameters:
+  lr:
+    distribution: log_uniform_values
+    min: 1e-4
+    max: 1e-3
+  warmup_steps:
+    values: [200, 500, 1000]
+  batch_size:
+    values: [64, 128, 256]
+  layers:
+    values: [4, 8, 12]
+  embed_dims:
+    values: [256, 512]
+  n_heads:
+    values: [4, 8]
+  dropout:
+    values: [0.0, 0.05, 0.1]
+  wd:
+    distribution: log_uniform_values
+    min: 0.01
+    max: 0.3

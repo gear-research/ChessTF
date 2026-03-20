@@ -16,4 +16,9 @@ if STOCKFISH_BIN=$(command -v stockfish 2>/dev/null); then
     STOCKFISH_ARG=(--stockfish-path "$STOCKFISH_BIN")
 fi
 
-exec python -m chesstf.training.trainer "${STOCKFISH_ARG[@]}" "$@"
+if [ "${SWEEP_MODE:-}" = "1" ]; then
+    echo "Starting W&B sweep agent..."
+    exec python scripts/sweep_train.py "${STOCKFISH_ARG[@]}" "$@"
+else
+    exec python -m chesstf.training.trainer "${STOCKFISH_ARG[@]}" "$@"
+fi

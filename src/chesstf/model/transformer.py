@@ -12,6 +12,8 @@ from chesstf.model.positional import RotaryPositionalEmbeddings
 from chesstf.model.stockfish_metric import StockfishMetric
 
 if TYPE_CHECKING:
+    from pytorch_lightning.utilities.types import OptimizerLRSchedulerConfig
+
     from .config import Config
 
 
@@ -124,7 +126,29 @@ class ChessFormer(L.LightningModule):
         self.legality_metric.reset()
         self.stockfish_metric.reset()
 
-    def configure_optimizers(self) -> torch.optim.Optimizer:
-        return torch.optim.AdamW(
+    def configure_optimizers(self) -> OptimizerLRSchedulerConfig:
+        optimizer = torch.optim.AdamW(
             self.parameters(), lr=self.config.lr, weight_decay=self.config.wd
         )
+
+        def lr_lambda(step: int) -> float:
+            warmup = self.config.warmup_steps
+            if step < warmup:
+                return step / max(1, warmup)
+            total = self.trainer.estimated_stepping_batches
+            decay_steps = total - warmup
+            progress = (step - warmup) / max(1, decay_steps)
+            import math
+            cosine = 0.5 * (1.0 + math.cos(math.pi * progress))
+            min_ratio = self.config.min_lr / self.config.lr
+            return min_ratio + (1.0 - min_ratio) * cosine
+
+        scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda)
+        return {
+            "optimizer": optimizer,
+            "lr_scheduler": {
+                "scheduler": scheduler,
+                "interval": "step",
+                "frequency": 1,
+            },
+        }

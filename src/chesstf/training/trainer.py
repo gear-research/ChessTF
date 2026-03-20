@@ -34,7 +34,7 @@ def main(
 
     dm = ChessDataModule(processed_dir, batch_size)
     model = ChessFormer(config, id_to_move, stockfish_path=stockfish_path)
-    trainer = L.Trainer(max_epochs=epochs, logger=wandb_logger)
+    trainer = L.Trainer(max_epochs=epochs, logger=wandb_logger, gradient_clip_val=1.0)
     trainer.fit(model, datamodule=dm)
 
 
@@ -62,13 +62,13 @@ if __name__ == "__main__":
         "--layers",
         help="Number of transformer layers",
         type=int,
-        default=2
+        default=8
     )
     parser.add_argument(
         "--heads",
         help="Number of transformer heads per layer",
         type=int,
-        default=2
+        default=4
     )
     parser.add_argument(
         "--dims",

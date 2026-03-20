@@ -45,6 +45,9 @@ Thumbs.db
 # DVC
 .dvc/cache/
 
+# Environment
+.env
+
 # W&B
 wandb/
 
